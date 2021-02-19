@@ -51,7 +51,7 @@ namespace MiniORM
 
                 if (invalidEntities.Any())
                 {
-                    throw new InvalidOperationException($"{invalidEntities.Lenght} Invalid Entities found in {dbSet.GetType().Name}!");
+                    throw new InvalidOperationException($"{invalidEntities.Length} Invalid Entities found in {dbSet.GetType().Name}!");
                 }
             }
 
@@ -200,8 +200,84 @@ namespace MiniORM
 
         private void MapNavigationProperties<TEntity>(DbSet<TEntity> dbSet)
             where TEntity : class, new()
-        { 
-        
+        {
+            var entityType = typeof(TEntity);
+
+            var foreignKeys = entityType.GetProperties().Where(pi => pi.HasAttribute<ForeignKeyAttribute>()).ToArray();
+
+            foreach (var foreignKey in foreignKeys)
+            {
+                var navigationPropertyName = foreignKey.GetCustomAttribute<ForeignKeyAttribute>().Name;
+                var navigationProperty = entityType.GetProperty(navigationPropertyName);
+                var navigationDbSet = this.dbSetProperties[navigationProperty.PropertyType].GetValue(this);
+                var navigationPrimaryKey = navigationProperty.PropertyType.GetProperties().First(pi => pi.HasAttribute<KeyAttribute>());
+
+                foreach (var entity in dbSet)
+                {
+                    var foreignKeyValue = foreignKey.GetValue(entity);
+
+                    var navigationPropertyValue = ((IEnumerable<object>)navigationDbSet).First(currentNavigationProperty => navigationPrimaryKey.GetValue(currentNavigationProperty).Equals(foreignKeyValue));
+
+                    navigationProperty.SetValue(entity, navigationPropertyValue);
+                }
+            }
+        }
+
+        private static bool IsObjectValid(object e)
+        {
+            var validationContext = new ValidationContext(e);
+            var validationErrors = new List<ValidationResult>();
+
+            var validationResult = Validator.TryValidateObject(e, validationContext, validationErrors, validateAllProperties: true);
+
+            return validationResult;
+        }
+
+        private IEnumerable<TEntity> LoadTableEntities<TEntity>()
+            where TEntity : class
+        {
+            var table = typeof(TEntity);
+
+            var columns = GetEntityColumnNames(table);
+
+            var tableName = GetTableName(table);
+
+            var fetchedRows = this.connection.FetchResultSet<TEntity>(tableName, columns).ToArray();
+
+            return fetchedRows;
+        }
+
+        private string GetTableName(Type tableType)
+        {
+            var tableName = ((TableAttribute) Attribute.GetCustomAttribute(tableType, typeof(TableAttribute)))?.Name;
+
+            if (tableName is null)
+            {
+                tableName = this.dbSetProperties[tableType].Name;
+            }
+
+            return tableName;
+        }
+
+        private Dictionary<Type, PropertyInfo> DiscoverDbSets()
+        {
+            var dbSets = this.GetType().GetProperties()
+                .Where(pi => pi.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>))
+                .ToDictionary(pi => pi.PropertyType.GetGenericArguments().First(), pi => pi);
+
+            return dbSets;
+        }
+
+        private string[] GetEntityColumnNames(Type table)
+        {
+            var tableName = this.GetTableName(table);
+            var dbColumns = this.connection.FetchColumnNames(tableName);
+
+            var columns = table.GetProperties()
+                .Where(pi => dbColumns.Contains(pi.Name) && !pi.HasAttribute<NotMappedAttribute>() && AllowedSqlTypes.Contains(pi.PropertyType))
+                .Select(pi => pi.Name).ToArray();
+
+            return columns;
         }
     }
 }

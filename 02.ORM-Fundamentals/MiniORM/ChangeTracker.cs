@@ -85,7 +85,7 @@ namespace MiniORM
         {
 			var monitoredProperties = typeof(T).GetProperties().Where(pi => DbContext.AllowedSqlTypes.Contains(pi.PropertyType));
 
-			var modifiedProperties = monitoredProperties.Where(pi => !Equals(pi.GetValue(entity), pi.GetValue(proxyEntity)).ToArray();
+			var modifiedProperties = monitoredProperties.Where(pi => !Equals(pi.GetValue(entity), pi.GetValue(proxyEntity))).ToArray();
 
 			var isModified = modifiedProperties.Any();
 
