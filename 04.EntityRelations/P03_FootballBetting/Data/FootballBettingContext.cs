@@ -3,7 +3,7 @@ using P03_FootballBetting.Data.Models;
 
 namespace P03_FootballBetting.Data
 {
-    class FootballBettingContext : DbContext
+    public class FootballBettingContext : DbContext
     {
         public FootballBettingContext()
         {
