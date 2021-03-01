@@ -22,10 +22,4 @@ namespace P01_StudentSystem.Data.Models
         public Course Course { get; set; }
     }
 }
-//o HomeworkId
-//o	Content (string, linking to a file, not unicode)
-//o ContentType(enum – can be Application, Pdf or Zip)
-//o SubmissionTime
-//o	StudentId
-//o	CourseId
 

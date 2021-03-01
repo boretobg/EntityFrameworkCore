@@ -21,7 +21,7 @@ namespace P01_StudentSystem.Data.Models
         public string Name { get; set; }
 
         [Column(TypeName = "char(10)")]
-        public int PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; }
 
         [Required]
         public DateTime RegisteredOn { get; set; }
