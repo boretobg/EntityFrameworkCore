@@ -36,7 +36,7 @@ namespace MusicHub.Data.Models
 
         //todo 	Price – calculated property(the sum of all song prices in the album)
 
-        public int ProducerId { get; set; }
+        public int? ProducerId { get; set; }
         public Producer Producer { get; set; }
 
         public ICollection<Song> Songs { get; set; }
