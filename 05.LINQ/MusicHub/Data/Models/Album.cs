@@ -7,8 +7,6 @@ namespace MusicHub.Data.Models
 {
     public class Album
     {
-        private ICollection<Song> songs;
-
         public Album()
         {
             this.Songs = new HashSet<Song>();
@@ -23,18 +21,7 @@ namespace MusicHub.Data.Models
         public DateTime ReleaseDate { get; set; }
 
         public decimal Price 
-        {
-            get
-            {
-                return this.Songs.Sum(x => x.Price);
-            }
-            set
-            {
-                this.songs = Songs;
-            }
-        } 
-
-        //todo 	Price – calculated property(the sum of all song prices in the album)
+               => this.Songs.Sum(x => x.Price);
 
         public int? ProducerId { get; set; }
         public Producer Producer { get; set; }
