@@ -1,4 +1,4 @@
-﻿namespace MusicHub.Data.Enums
+﻿namespace MusicHub.Data.Models.Enums
 {
     public enum Genre
     {

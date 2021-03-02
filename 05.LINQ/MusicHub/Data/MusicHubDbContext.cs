@@ -1,15 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MusicHub.Data.Models;
-
-namespace MusicHub.Data
+﻿namespace MusicHub.Data
 {
+    using Microsoft.EntityFrameworkCore;
+    using MusicHub.Data.Models;
+
     public class MusicHubDbContext : DbContext
     {
         public MusicHubDbContext()
         {
         }
 
-        public MusicHubDbContext(Microsoft.EntityFrameworkCore.DbContextOptions options) 
+        public MusicHubDbContext(DbContextOptions options)
             : base(options)
         {
         }
@@ -21,24 +21,22 @@ namespace MusicHub.Data
         public DbSet<SongPerformer> SongsPerformers { get; set; }
         public DbSet<Writer> Writers { get; set; }
 
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Server=.;Database=MusicHub;Integrated Security=true");
+                optionsBuilder
+                    .UseSqlServer(Configuration.ConnectionString);
             }
-
-            base.OnConfiguring(optionsBuilder);
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder builder)
         {
-            modelBuilder.Entity<SongPerformer>(x => 
+            builder.Entity<SongPerformer>(x =>
             {
-                x.HasKey(x => new {x.SongId, x.PerformerId }); 
+                x.HasKey(x => new { x.SongId, x.PerformerId });
             });
-
-            base.OnModelCreating(modelBuilder);
         }
     }
 }

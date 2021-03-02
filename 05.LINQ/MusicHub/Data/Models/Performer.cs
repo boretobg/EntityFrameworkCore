@@ -5,7 +5,6 @@ namespace MusicHub.Data.Models
 {
     public class Performer
     {
-
         public Performer()
         {
             this.PerformerSongs = new HashSet<SongPerformer>();
@@ -15,7 +14,7 @@ namespace MusicHub.Data.Models
 
         [MaxLength(20), Required]
         public string FirstName { get; set; }
-        
+
         [MaxLength(20), Required]
         public string LastName { get; set; }
 

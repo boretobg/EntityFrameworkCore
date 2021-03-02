@@ -1,4 +1,4 @@
-﻿using MusicHub.Data.Enums;
+﻿using MusicHub.Data.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -7,7 +7,6 @@ namespace MusicHub.Data.Models
 {
     public class Song
     {
-
         public Song()
         {
             this.SongPerformers = new HashSet<SongPerformer>();
@@ -40,4 +39,3 @@ namespace MusicHub.Data.Models
         public ICollection<SongPerformer> SongPerformers { get; set; }
     }
 }
-

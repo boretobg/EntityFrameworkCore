@@ -5,7 +5,6 @@ namespace MusicHub.Data.Models
 {
     public class Producer
     {
-
         public Producer()
         {
             this.Albums = new HashSet<Album>();
