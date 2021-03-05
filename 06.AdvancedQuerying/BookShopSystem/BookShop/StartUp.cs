@@ -18,6 +18,23 @@
             DbInitializer.ResetDatabase(db);
         }
 
+        public static string GetBookTitlesContaining(BookShopContext context, string input)
+        {
+            var books = context.Books
+                .Where(b => b.Title.ToLower().Contains(input.ToLower()))
+                .OrderBy(b => b.Title)
+                .ToList();
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (var book in books)
+            {
+                sb.AppendLine(book.Title);
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
         public static string GetAuthorNamesEndingIn(BookShopContext context, string input)
         {
             var authors = context.Authors
