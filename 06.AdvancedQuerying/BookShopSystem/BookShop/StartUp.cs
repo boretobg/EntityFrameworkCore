@@ -18,6 +18,15 @@
             DbInitializer.ResetDatabase(db);
         }
 
+        public static int CountBooks(BookShopContext context, int lengthCheck)
+        {
+            var books = context.Books
+                .Where(b => b.Title.Length > lengthCheck)
+                .ToList();
+
+            return books.Count();
+        }
+
         public static string GetBooksByAuthor(BookShopContext context, string input)
         {
             var books = context.Books
