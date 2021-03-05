@@ -6,6 +6,7 @@
     using Microsoft.EntityFrameworkCore;
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Text;
 
@@ -15,6 +16,29 @@
         {
             using var db = new BookShopContext();
             DbInitializer.ResetDatabase(db);
+        }
+
+        public static string GetBooksReleasedBefore(BookShopContext context, string date)
+        {
+            var books = context.Books
+                .OrderByDescending(x => x.ReleaseDate)
+                .Where(x => x.ReleaseDate.Value < DateTime.ParseExact(date, "dd-MM-yyyy", CultureInfo.InvariantCulture))
+                .Select(x => new
+                { 
+                    Title = x.Title,
+                    EditionType = x.EditionType,
+                    Price = x.Price
+                })
+                .ToList();
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (var book in books)
+            {
+                sb.AppendLine($"{book.Title} - {book.EditionType} - ${book.Price:f2}");
+            }
+
+            return sb.ToString().TrimEnd();
         }
 
         public static string GetBooksByCategory(BookShopContext context, string input)
