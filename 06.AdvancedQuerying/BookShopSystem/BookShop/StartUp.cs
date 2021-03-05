@@ -18,6 +18,27 @@
             DbInitializer.ResetDatabase(db);
         }
 
+        public static string CountCopiesByAuthor(BookShopContext context)
+        {
+            var authors = context.Authors
+                .Select(a => new
+                {
+                    FullName = a.FirstName + " " + a.LastName,
+                    Copies = a.Books.Sum(b => b.Copies)
+                })
+                .OrderByDescending(x => x.Copies)
+                .ToList();
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (var author in authors)
+            {
+                sb.AppendLine($"{author.FullName} - {author.Copies}");
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
         public static int CountBooks(BookShopContext context, int lengthCheck)
         {
             var books = context.Books
