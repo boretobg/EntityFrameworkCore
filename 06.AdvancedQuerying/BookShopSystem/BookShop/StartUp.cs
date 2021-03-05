@@ -13,6 +13,23 @@
             DbInitializer.ResetDatabase(db);
         }
 
+        public static string GetBooksNotReleasedIn(BookShopContext context, int year)
+        {
+            var bookTitles = context.Books
+                .OrderBy(b => b.BookId)
+                .Where(b => b.ReleaseDate.Value.Year != year)
+                .ToList();
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (var title in bookTitles)
+            {
+                sb.AppendLine(title.Title);
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
         public static string GetBooksByPrice(BookShopContext context)
         {
             var titlePrices = context.Books
