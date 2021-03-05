@@ -13,6 +13,28 @@
             DbInitializer.ResetDatabase(db);
         }
 
+        public static string GetBooksByPrice(BookShopContext context)
+        {
+            var titlePrices = context.Books
+                .OrderByDescending(b => b.Price)
+                .Where(b => b.Price > 40)
+                .Select(b => new
+                {
+                    Title = b.Title,
+                    Price = b.Price
+                })
+                .ToList();
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (var titlePrice in titlePrices)
+            {
+                sb.AppendLine($"{titlePrice.Title} - ${titlePrice.Price:f2}");
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
         public static string GetGoldenBooks(BookShopContext context)
         {
             var titles = context.Books
@@ -37,7 +59,7 @@
             var bookTitles = context.Books
                 .OrderBy(x => x.Title)
                 .Where(x => x.AgeRestriction.ToString().ToLower() == command.ToLower())
-                .Select(x => new { Title = x.Title})
+                .Select(x => new { Title = x.Title })
                 .ToList();
 
             StringBuilder sb = new StringBuilder();
