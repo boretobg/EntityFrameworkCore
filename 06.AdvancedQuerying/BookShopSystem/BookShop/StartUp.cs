@@ -18,6 +18,30 @@
             DbInitializer.ResetDatabase(db);
         }
 
+        public static string GetBooksByAuthor(BookShopContext context, string input)
+        {
+            var books = context.Books
+                .Include(b => b.Author)
+                .Where(b => b.Author.LastName.ToLower().StartsWith(input.ToLower()))
+                .ToList()
+                .OrderBy(b => b.BookId)
+                .Select(b => new
+                {
+                    Title = b.Title,
+                    Names = b.Author.FirstName + " " + b.Author.LastName
+                })
+                .ToList();
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (var book in books)
+            {
+                sb.AppendLine($"{book.Title} ({book.Names})");
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
         public static string GetBookTitlesContaining(BookShopContext context, string input)
         {
             var books = context.Books
