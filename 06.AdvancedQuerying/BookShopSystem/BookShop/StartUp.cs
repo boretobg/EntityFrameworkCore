@@ -1,7 +1,11 @@
 ﻿namespace BookShop
 {
+    using BookShop.Models;
     using Data;
     using Initializer;
+    using Microsoft.EntityFrameworkCore;
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Text;
 
@@ -11,6 +15,26 @@
         {
             using var db = new BookShopContext();
             DbInitializer.ResetDatabase(db);
+        }
+
+        public static string GetBooksByCategory(BookShopContext context, string input)
+        {
+            string[] categories = input.Split(" ").Select(x => x.ToLower()).ToArray();
+            var titles = new List<string>();
+
+
+            var temp = context.Books
+                .Include(x => x.BookCategories)
+                .ThenInclude(x => x.Category)
+                .ToList()
+                .Where(x => x.BookCategories.Any(x => categories.Contains(x.Category.Name.ToLower())))
+                .Select(x => x.Title)
+                .OrderBy(title => title)
+                .ToList();
+
+            var result = string.Join(Environment.NewLine, temp);
+
+            return result;
         }
 
         public static string GetBooksNotReleasedIn(BookShopContext context, int year)
