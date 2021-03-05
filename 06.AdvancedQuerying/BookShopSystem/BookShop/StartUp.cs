@@ -18,6 +18,27 @@
             DbInitializer.ResetDatabase(db);
         }
 
+        public static string GetAuthorNamesEndingIn(BookShopContext context, string input)
+        {
+            var authors = context.Authors
+                .Where(a => a.FirstName.EndsWith(input))
+                .Select(a => new
+                {
+                    FullName = a.FirstName + " " + a.LastName,
+                })
+                .OrderBy(a => a.FullName)
+                .ToList();
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (var author in authors)
+            {
+                sb.AppendLine(author.FullName);
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
         public static string GetBooksReleasedBefore(BookShopContext context, string date)
         {
             var books = context.Books
