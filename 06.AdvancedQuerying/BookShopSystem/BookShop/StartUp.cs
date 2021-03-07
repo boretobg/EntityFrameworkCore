@@ -19,6 +19,39 @@
 
         }
 
+        public static string GetMostRecentBooks(BookShopContext context)
+        {
+            var categoties = context.Categories
+                .Select(x => new
+                {
+                    Name = x.Name,
+                    Books = x.CategoryBooks.Select(x => new
+                    { 
+                        x.Book.Title,
+                        x.Book.ReleaseDate.Value
+                    })
+                    .OrderByDescending(x => x.Value)
+                    .Take(3)
+                    .ToList()
+                })
+                .OrderBy(x => x.Name)
+                .ToList();
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (var category in categoties)
+            {
+                sb.AppendLine($"--{category.Name}");
+
+                foreach (var book in category.Books)
+                {
+                    sb.AppendLine($"{book.Title} ({book.Value.Year})");
+                }
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
         public static string GetTotalProfitByCategory(BookShopContext context)
         {
             var categories = context.Categories
