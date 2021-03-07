@@ -16,7 +16,17 @@
         {
             using var db = new BookShopContext();
             DbInitializer.ResetDatabase(db);
+        }
 
+        public static int RemoveBooks(BookShopContext context)
+        {
+            var books = context.Books.Where(x => x.Copies < 4200).ToList();
+
+            context.Books.RemoveRange(books);
+
+            context.SaveChanges();
+
+            return books.Count;
         }
 
         public static void IncreasePrices(BookShopContext context)
