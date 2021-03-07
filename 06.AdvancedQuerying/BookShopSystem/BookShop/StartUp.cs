@@ -16,6 +16,24 @@
         {
             using var db = new BookShopContext();
             DbInitializer.ResetDatabase(db);
+
+        }
+
+        public static string GetTotalProfitByCategory(BookShopContext context)
+        {
+            var categories = context.Categories
+                .Select(x => new
+                {
+                    Category = x.Name,
+                    TotalProfit = x.CategoryBooks.Sum(x => x.Book.Price * x.Book.Copies)
+                })
+                .OrderByDescending(x => x.TotalProfit)
+                .ThenBy(x => x.Category)
+                .ToList();
+
+            var output = string.Join(Environment.NewLine, categories.Select(x => $"{x.Category} ${x.TotalProfit:f2}"));
+
+            return output;
         }
 
         public static string CountCopiesByAuthor(BookShopContext context)
