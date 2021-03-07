@@ -19,6 +19,18 @@
 
         }
 
+        public static void IncreasePrices(BookShopContext context)
+        {
+            var books = context.Books
+                .Where(x => x.ReleaseDate.Value.Year < 2010)
+                .ToList();
+
+            foreach (var book in books)
+            {
+                book.Price += 5;
+            }
+        }
+
         public static string GetMostRecentBooks(BookShopContext context)
         {
             var categoties = context.Categories
