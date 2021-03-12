@@ -23,7 +23,32 @@ namespace ProductShop
             //string inputJson = File.ReadAllText("../../../Datasets/product.json");
 
             //string result = ImportUsers(context, inputJson);
+        }
 
+        public static string GetSoldProducts(ProductShopContext context)
+        {
+            var users = context.Users
+                .Where(u => u.ProductsSold.Count >= 1 && u.ProductsSold.Any(x => x.Buyer != null))
+                .Select(u => new
+                {
+                    firstName = u.FirstName,
+                    lastName = u.LastName,
+                    soldProducts = u.ProductsSold
+                    .Select(ps => new
+                    {
+                        name = ps.Name,
+                        price = ps.Price,
+                        buyerFirstName = ps.Buyer.FirstName,
+                        buyerLastName = ps.Buyer.LastName
+                    })
+                })
+                .OrderBy(x => x.lastName)
+                .ThenBy(x => x.firstName)
+                .ToList();
+
+            var result = JsonConvert.SerializeObject(users, Formatting.Indented);
+
+            return result;
         }
 
         public static string GetProductsInRange(ProductShopContext context)
