@@ -17,14 +17,31 @@ namespace ProductShop
         public static void Main(string[] args)
         {
             var context = new ProductShopContext();
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
+            //context.Database.EnsureDeleted();
+            //context.Database.EnsureCreated();
 
             //string inputJson = File.ReadAllText("../../../Datasets/product.json");
 
             //string result = ImportUsers(context, inputJson);
 
-            //Console.WriteLine(result);
+        }
+
+        public static string GetProductsInRange(ProductShopContext context)
+        {
+            var products = context.Products
+                .Where(x => x.Price >= 500 && x.Price <= 1000)
+                .Select(p => new
+                {
+                    name = p.Name,
+                    price = p.Price,
+                    seller = p.Seller.FirstName + " " + p.Seller.LastName
+                })
+                .OrderBy(x => x.price)
+                .ToList();
+
+            var result = JsonConvert.SerializeObject(products, Formatting.Indented);
+
+            return result;
         }
 
         public static string ImportCategoryProducts(ProductShopContext context, string inputJson)
