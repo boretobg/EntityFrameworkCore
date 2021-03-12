@@ -27,6 +27,20 @@ namespace ProductShop
             //Console.WriteLine(result);
         }
 
+        public static string ImportCategoryProducts(ProductShopContext context, string inputJson)
+        {
+            InitializeAutoMapper();
+
+            var dtoCategoryProduct = JsonConvert.DeserializeObject<IEnumerable<CategoryProductInputModel>>(inputJson);
+
+            var categoryProduct = mapper.Map<IEnumerable<CategoryProduct>>(dtoCategoryProduct);
+
+            context.CategoryProducts.AddRange(categoryProduct);
+            context.SaveChanges();
+
+            return $"Successfully imported {categoryProduct.Count()}";
+        }
+
         public static string ImportCategories(ProductShopContext context, string inputJson)
         {
             InitializeAutoMapper();
