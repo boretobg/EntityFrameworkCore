@@ -20,11 +20,25 @@ namespace ProductShop
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
-            string inputJson = File.ReadAllText("../../../Datasets/users.json");
+            string inputJson = File.ReadAllText("../../../Datasets/product.json");
 
             string result = ImportUsers(context, inputJson);
 
             Console.WriteLine(result);
+        }
+
+        public static string ImportProducts(ProductShopContext context, string inputJson)
+        {
+            InitializeAutoMapper();
+
+            var dtoProducts = JsonConvert.DeserializeObject<IEnumerable<ProductInputModel>>(inputJson);
+
+            var products = mapper.Map<IEnumerable<Product>>(dtoProducts);
+
+            context.Products.AddRange(products);
+            context.SaveChanges();
+
+            return $"Successfully imported {products.Count()}";
         }
 
         public static string ImportUsers(ProductShopContext context, string inputJson)
