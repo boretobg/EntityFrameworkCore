@@ -17,9 +17,19 @@ namespace CarDealer
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
-            string json = File.ReadAllText("../../../Datasets/parts.json");
-           string asd = ImportParts(context, json);
+            string json = File.ReadAllText("../../../Datasets/cars.json");
+            string asd = ImportCars(context, json);
             Console.WriteLine(asd);
+        }
+
+        public static string ImportCars(CarDealerContext context, string inputJson)
+        {
+            var cars = JsonConvert.DeserializeObject<IEnumerable<Car>>(inputJson);
+
+            context.Cars.AddRange(cars);
+            context.SaveChanges();
+
+            return $"Successfully imported {cars.Count()}.";
         }
 
         public static string ImportParts(CarDealerContext context, string inputJson)
