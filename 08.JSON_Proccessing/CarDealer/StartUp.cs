@@ -22,6 +22,24 @@ namespace CarDealer
             Console.WriteLine(asd);
         }
 
+        public static string GetOrderedCustomers(CarDealerContext context)
+        {
+            var customers = context.Customers
+                .OrderBy(x => x.BirthDate)
+                .ThenBy(x => x.IsYoungDriver)
+                .Select(x => new
+                {
+                    Name = x.Name,
+                    BirthDate = x.BirthDate.ToString("dd/MM/yyyy"),
+                    IsYoungDriver = x.IsYoungDriver
+                })
+                .ToList();
+
+            var result = JsonConvert.SerializeObject(customers, Formatting.Indented);
+
+            return result;
+        }
+
         public static string ImportSales(CarDealerContext context, string inputJson)
         {
             var sales = JsonConvert.DeserializeObject<IEnumerable<Sale>>(inputJson);
