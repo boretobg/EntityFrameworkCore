@@ -22,6 +22,16 @@ namespace CarDealer
             Console.WriteLine(asd);
         }
 
+        public static string ImportCustomers(CarDealerContext context, string inputJson)
+        {
+            var customers = JsonConvert.DeserializeObject<IEnumerable<Customer>>(inputJson);
+
+            context.Customers.AddRange(customers);
+            context.SaveChanges();
+
+            return $"Successfully imported {customers.Count()}.";
+        }
+
         public static string ImportCars(CarDealerContext context, string inputJson)
         {
             var cars = JsonConvert.DeserializeObject<IEnumerable<Car>>(inputJson);
