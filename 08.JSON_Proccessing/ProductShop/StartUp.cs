@@ -25,6 +25,24 @@ namespace ProductShop
             //string result = ImportUsers(context, inputJson);
         }
 
+        public static string GetCategoriesByProductsCount(ProductShopContext context)
+        {
+            var categories = context.Categories
+                .Select(x => new
+                {
+                    category = x.Name,
+                    productsCount = x.CategoryProducts.Count(),
+                    averagePrice = $"{x.CategoryProducts.Average(c => c.Product.Price):f2}",
+                    totalRevenue = $"{x.CategoryProducts.Sum(c => c.Product.Price):f2}"
+                })
+                .OrderByDescending(x => x.productsCount)
+                .ToList();
+
+            var result = JsonConvert.SerializeObject(categories, Formatting.Indented);
+
+            return result;
+        }
+
         public static string GetSoldProducts(ProductShopContext context)
         {
             var users = context.Users
