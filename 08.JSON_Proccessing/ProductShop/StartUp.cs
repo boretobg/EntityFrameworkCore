@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using ProductShop.Data;
 using ProductShop.Models;
 using ProductShop.Models.DataTransferObjects;
+using Microsoft.EntityFrameworkCore;
 
 namespace ProductShop
 {
@@ -23,6 +24,43 @@ namespace ProductShop
             //string inputJson = File.ReadAllText("../../../Datasets/product.json");
 
             //string result = ImportUsers(context, inputJson);
+        }
+
+        public static string GetUsersWithProducts(ProductShopContext context)
+        {
+            var users = context.Users
+                .Include(x => x.ProductsSold)
+                .ToList()
+                .Where(x => x.ProductsSold.Any(b => b.BuyerId != null))
+                .Select(u => new
+                {
+                    firstName = u.FirstName,
+                    lastName = u.LastName,
+                    age = u.Age,
+                    soldProducts = new
+                    {
+                        count = u.ProductsSold.Where(x => x.BuyerId != null).Count(),
+                        products = u.ProductsSold
+                        .Where(x => x.BuyerId != null)
+                        .Select(p => new
+                        {
+                            name = p.Name,
+                            price = p.Price
+                        })
+                    }
+                })
+                .OrderByDescending(x => x.soldProducts.products.Count())
+                .ToList();
+
+            var result = new
+            {
+                usersCount = context.Users.Where(u => u.ProductsSold.Any(x => x.BuyerId != null)).Count(),
+                users = users
+            };
+
+            var resultJson = JsonConvert.SerializeObject(result, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+
+            return resultJson;
         }
 
         public static string GetCategoriesByProductsCount(ProductShopContext context)
