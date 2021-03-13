@@ -22,6 +22,24 @@ namespace CarDealer
             Console.WriteLine(asd);
         }
 
+        public static string GetCarsFromMakeToyota(CarDealerContext context)
+        {
+            var cars = context.Cars
+                .Where(x => x.Make == "Toyota")
+                .OrderBy(x => x.Model)
+                .ThenByDescending(x => x.TravelledDistance)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Make,
+                    x.Model,
+                    x.TravelledDistance
+                })
+                .ToList();
+
+            return JsonConvert.SerializeObject(cars, Formatting.Indented);
+        }
+
         public static string GetOrderedCustomers(CarDealerContext context)
         {
             var customers = context.Customers
