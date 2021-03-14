@@ -22,6 +22,23 @@ namespace CarDealer
             Console.WriteLine(asd);
         }
 
+        public static string GetLocalSuppliers(CarDealerContext context)
+        {
+            var suppliers = context.Suppliers
+                .Where(x => x.IsImporter == false)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Name,
+                    PartsCount = x.Parts.Count()
+                })
+                .ToList();
+
+            var result = JsonConvert.SerializeObject(suppliers, Formatting.Indented);
+
+            return result;
+        }
+
         public static string GetCarsFromMakeToyota(CarDealerContext context)
         {
             var cars = context.Cars
