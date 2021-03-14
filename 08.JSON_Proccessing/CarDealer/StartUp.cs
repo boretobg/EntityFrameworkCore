@@ -16,10 +16,31 @@ namespace CarDealer
             var context = new CarDealerContext();
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
+        }
 
-            string json = File.ReadAllText("../../../Datasets/cars.json");
-            string asd = ImportCars(context, json);
-            Console.WriteLine(asd);
+        public static string GetCarsWithTheirListOfParts(CarDealerContext context)
+        {
+            var cars = context.Cars
+                .Select(c => new
+                {
+                    car = new
+                    {
+                        c.Make,
+                        c.Model,
+                        c.TravelledDistance
+                    },
+                    parts = c.PartCars
+                    .Select(p => new
+                    { 
+                        Name = p.Part.Name,
+                        Price = $"{p.Part.Price:f2}"
+                    })
+                })
+                .ToList();
+
+            var result = JsonConvert.SerializeObject(cars, Formatting.Indented);
+
+            return result;
         }
 
         public static string GetLocalSuppliers(CarDealerContext context)
