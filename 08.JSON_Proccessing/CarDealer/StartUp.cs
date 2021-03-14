@@ -18,6 +18,25 @@ namespace CarDealer
             context.Database.EnsureCreated();
         }
 
+        public static string GetTotalSalesByCustomer(CarDealerContext context)
+        {
+            var customers = context.Customers
+                .Where(x => x.Sales.Count() >= 1)
+                .Select(x => new
+                {
+                    fullName = x.Name,
+                    boughtCars = x.Sales.Count(),
+                    spentMoney = x.Sales.Sum(c => c.Car.PartCars.Sum(p => p.Part.Price))
+                })
+                .OrderByDescending(x => x.spentMoney)
+                .ThenByDescending(x => x.boughtCars)
+                .ToList();
+
+            var result = JsonConvert.SerializeObject(customers, Formatting.Indented);
+
+            return result;
+        }
+
         public static string GetCarsWithTheirListOfParts(CarDealerContext context)
         {
             var cars = context.Cars
