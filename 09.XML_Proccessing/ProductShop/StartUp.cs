@@ -13,12 +13,35 @@ namespace ProductShop
         public static void Main(string[] args)
         {
             var context = new ProductShopContext();
-            //context.Database.EnsureDeleted();
-            // context.Database.EnsureCreated();
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
 
-            var text = File.ReadAllText("../../../Datasets/products.xml");
+            var text = File.ReadAllText("../../../Datasets/categories-products.xml");
             var xml = XDocument.Parse(text);
-            System.Console.WriteLine(ImportProducts(context, text));
+            System.Console.WriteLine(ImportCategoryProducts(context, text));
+        }
+
+        public static string ImportCategoryProducts(ProductShopContext context, string inputXml)
+        {
+            var xmlSerialized = new XmlSerializer(typeof(CategoryProductInputModel[]), new XmlRootAttribute("CategoryProducts"));
+
+            var textRead = new StringReader(inputXml);
+
+            var categoryProductsDto = xmlSerialized.Deserialize(textRead) as CategoryProductInputModel[];
+
+            var categoriesProducts = categoryProductsDto
+                .Where(x => x.CategoryId != null || x.ProductId != null)
+                .Select(x => new CategoryProduct
+                {
+                    CategoryId = (int)x.CategoryId,
+                    ProductId = (int)x.ProductId
+                })
+                .ToList();
+
+            context.CategoryProducts.AddRange(categoriesProducts);
+            context.SaveChanges();
+
+            return $"Successfully imported {categoriesProducts.Count}";
         }
 
         public static string ImportCategories(ProductShopContext context, string inputXml)

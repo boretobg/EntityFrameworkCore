@@ -3,6 +3,7 @@
     using Microsoft.EntityFrameworkCore;
 
     using Models;
+    using ProductShop.Dtos.Import;
 
     public class ProductShopContext : DbContext
     {
@@ -33,6 +34,11 @@
             modelBuilder.Entity<CategoryProduct>(entity =>
             {
                 entity.HasKey(x => new { x.CategoryId, x.ProductId});
+            });
+
+            modelBuilder.Entity<CategoryProductInputModel>(entity =>
+            {
+                entity.HasKey(x => new { x.CategoryId, x.ProductId });
             });
 
             modelBuilder.Entity<User>(entity =>
