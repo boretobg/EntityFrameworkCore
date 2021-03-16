@@ -14,11 +14,33 @@ namespace ProductShop
         {
             var context = new ProductShopContext();
             //context.Database.EnsureDeleted();
-           // context.Database.EnsureCreated();
+            // context.Database.EnsureCreated();
 
             var text = File.ReadAllText("../../../Datasets/products.xml");
             var xml = XDocument.Parse(text);
             System.Console.WriteLine(ImportProducts(context, text));
+        }
+
+        public static string ImportCategories(ProductShopContext context, string inputXml)
+        {
+            var xmlSerialized = new XmlSerializer(typeof(CategoryInputModel[]), new XmlRootAttribute("Categories"));
+
+            var textRead = new StringReader(inputXml);
+
+            var categoriesDto = xmlSerialized.Deserialize(textRead) as CategoryInputModel[];
+
+            var categories = categoriesDto
+                .Where(x => x.Name != null)
+                .Select(x => new Category
+                {
+                    Name = x.Name
+                })
+                .ToList();
+
+            context.Categories.AddRange(categories);
+            context.SaveChanges();
+
+            return $"Successfully imported {categories.Count}";
         }
 
         public static string ImportProducts(ProductShopContext context, string inputXml)
