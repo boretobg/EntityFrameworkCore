@@ -1,4 +1,5 @@
 ﻿using ProductShop.Data;
+using ProductShop.Dtos.Export;
 using ProductShop.Dtos.Import;
 using ProductShop.Models;
 using System.IO;
@@ -16,9 +17,33 @@ namespace ProductShop
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
-            var text = File.ReadAllText("../../../Datasets/categories-products.xml");
-            var xml = XDocument.Parse(text);
-            System.Console.WriteLine(ImportCategoryProducts(context, text));
+            System.Console.WriteLine(GetProductsInRange(context));
+        }
+
+        public static string GetProductsInRange(ProductShopContext context)
+        {
+            var products = context.Products
+                .Where(x => x.Price >= 500 && x.Price <= 1000)
+                .Select(p => new ProductOutputModel
+                {
+                    Name = p.Name,
+                    Price = p.Price,
+                    Buyer = p.Buyer.FirstName + " " + p.Buyer.LastName
+                })
+                .OrderBy(x => x.Price)
+                .Take(10)
+                .ToArray();
+
+            var xmlSerializer = new XmlSerializer(typeof(ProductOutputModel[]), new XmlRootAttribute("Products"));
+
+            var textWriter = new StringWriter();
+
+            var nameSpace = new XmlSerializerNamespaces();
+            nameSpace.Add("", "");
+
+            xmlSerializer.Serialize(textWriter, products, nameSpace);
+
+            return textWriter.ToString();
         }
 
         public static string ImportCategoryProducts(ProductShopContext context, string inputXml)
