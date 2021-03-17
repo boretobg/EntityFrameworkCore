@@ -17,7 +17,39 @@ namespace ProductShop
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
-            System.Console.WriteLine(GetProductsInRange(context));
+            System.Console.WriteLine(GetSoldProducts(context));
+        }
+
+        public static string GetSoldProducts(ProductShopContext context)
+        {
+            var users = context.Users
+                .Where(x => x.ProductsSold.Count() >= 1)
+                .Select(x => new UsersOutputModel
+                {
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    SoldProducts = x.ProductsSold.Select(p => new ProductsUsersExportModel 
+                    {
+                        Name = p.Name,
+                        Price = p.Price
+                    })
+                    .ToList()
+                })
+                .OrderBy(x => x.LastName)
+                .ThenBy(x => x.FirstName)
+                .Take(5)
+                .ToArray();
+
+            var xmlSerializer = new XmlSerializer(typeof(UsersOutputModel[]), new XmlRootAttribute("Users"));
+
+            var textWriter = new StringWriter();
+
+            var nameSpace = new XmlSerializerNamespaces();
+            nameSpace.Add("", "");
+
+            xmlSerializer.Serialize(textWriter, users, nameSpace);
+
+            return textWriter.ToString();
         }
 
         public static string GetProductsInRange(ProductShopContext context)
