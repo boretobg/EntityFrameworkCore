@@ -6,8 +6,11 @@ using System.Xml.Serialization;
 namespace ProductShop.Dtos.Export
 {
     [XmlType("Product")]
-    public class ProductsUsersExportModel
+    public class ProductsExportModel
     {
+        [XmlElement("count")]
+        public int Count { get; set; }
+
         [XmlElement("name")]
         public string Name { get; set; }
 

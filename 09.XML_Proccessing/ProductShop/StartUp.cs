@@ -4,6 +4,7 @@ using ProductShop.Dtos.Import;
 using ProductShop.Models;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 
@@ -17,7 +18,45 @@ namespace ProductShop
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
-            System.Console.WriteLine(GetSoldProducts(context));
+            System.Console.WriteLine(GetUsersWithProducts(context));
+        }
+
+        public static string GetUsersWithProducts(ProductShopContext context)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            var users = context.Users
+                .Where(x => x.ProductsSold.Count() >= 1)
+                .OrderByDescending(x => x.ProductsSold.Count())
+                .Select(x => new UserExportModel
+                {
+                    Count = context.Users.Count(u => u.FirstName != null),
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    Age = x.Age,
+                    SoldProducts = x.ProductsSold
+                    .Select(p => new ProductsExportModel
+                    {
+                        Count = x.ProductsSold.Count(ps => ps.Buyer != null),
+                        Name = p.Name,
+                        Price = p.Price
+                    })
+                    .OrderByDescending(o => o.Price)
+                    .ToList()
+                })
+                .Take(10)
+                .ToArray();
+
+            var xmlSerializer = new XmlSerializer(typeof(UserExportModel[]), new XmlRootAttribute("users"));
+
+            var textWriter = new StringWriter();
+
+            var nameSpace = new XmlSerializerNamespaces();
+            nameSpace.Add("", "");
+
+            xmlSerializer.Serialize(textWriter, users, nameSpace);
+
+            return textWriter.ToString();
         }
 
         public static string GetCategoriesByProductsCount(ProductShopContext context)
@@ -54,7 +93,7 @@ namespace ProductShop
                 {
                     FirstName = x.FirstName,
                     LastName = x.LastName,
-                    SoldProducts = x.ProductsSold.Select(p => new ProductsUsersExportModel 
+                    SoldProducts = x.ProductsSold.Select(p => new ProductsExportModel
                     {
                         Name = p.Name,
                         Price = p.Price
