@@ -1,4 +1,5 @@
 ﻿using CarDealer.Data;
+using CarDealer.ExportModelDtos;
 using CarDealer.ModelDtos;
 using CarDealer.Models;
 using System.IO;
@@ -12,6 +13,33 @@ namespace CarDealer
         public static void Main(string[] args)
         {
 
+        }
+
+        public static string GetCarsWithDistance(CarDealerContext context)
+        {
+            var cars = context.Cars
+                .Where(x => x.TravelledDistance > 2_000_000)
+                .Select(p => new CarExportModel
+                {
+                    Make = p.Make,
+                    Model = p.Model,
+                    TravelledDistance = p.TravelledDistance
+                })
+                .OrderBy(x => x.Make)
+                .ThenBy(x => x.Model)
+                .Take(10)
+                .ToArray();
+
+            var xmlSerializer = new XmlSerializer(typeof(CarExportModel[]), new XmlRootAttribute("cars"));
+
+            var textWriter = new StringWriter();
+
+            var nameSpace = new XmlSerializerNamespaces();
+            nameSpace.Add("", "");
+
+            xmlSerializer.Serialize(textWriter, cars, nameSpace);
+
+            return textWriter.ToString();
         }
 
         public static string ImportSales(CarDealerContext context, string inputXml)
