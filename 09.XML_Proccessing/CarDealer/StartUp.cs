@@ -10,20 +10,43 @@ namespace CarDealer
 {
     public class StartUp
     {
-        public static void Main(string[] args)
-        {
+        public static void Main(string[] args){}
 
+        public static string GetCarsFromMakeBmw(CarDealerContext context)
+        {
+            var cars = context.Cars
+                .Where(x => x.Make == "BMW")
+                .OrderBy(x => x.Model)
+                .ThenByDescending(x => x.TravelledDistance)
+                .Select(c => new CarBMWExportModel
+                { 
+                    Id = c.Id,
+                    Model = c.Model,
+                    TravelledDistance = c.TravelledDistance
+                })
+                .ToArray();
+
+            var xmlSerializer = new XmlSerializer(typeof(CarBMWExportModel[]), new XmlRootAttribute("cars"));
+
+            var textWriter = new StringWriter();
+
+            var nameSpace = new XmlSerializerNamespaces();
+            nameSpace.Add("", "");
+
+            xmlSerializer.Serialize(textWriter, cars, nameSpace);
+
+            return textWriter.ToString();
         }
 
         public static string GetCarsWithDistance(CarDealerContext context)
         {
             var cars = context.Cars
                 .Where(x => x.TravelledDistance > 2_000_000)
-                .Select(p => new CarExportModel
+                .Select(c => new CarExportModel
                 {
-                    Make = p.Make,
-                    Model = p.Model,
-                    TravelledDistance = p.TravelledDistance
+                    Make = c.Make,
+                    Model = c.Model,
+                    TravelledDistance = c.TravelledDistance
                 })
                 .OrderBy(x => x.Make)
                 .ThenBy(x => x.Model)
