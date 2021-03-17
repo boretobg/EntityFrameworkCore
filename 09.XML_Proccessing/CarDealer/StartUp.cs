@@ -14,6 +14,29 @@ namespace CarDealer
 
         }
 
+        public static string ImportCustomers(CarDealerContext context, string inputXml)
+        {
+            var xmlSerialized = new XmlSerializer(typeof(CustomerImportModel[]), new XmlRootAttribute("Customers"));
+
+            var textRead = new StringReader(inputXml);
+
+            var customersDto = xmlSerialized.Deserialize(textRead) as CustomerImportModel[];
+
+            var customers = customersDto
+                .Select(x => new Customer
+                {
+                    Name = x.Name,
+                    BirthDate = x.BirthDate,
+                    IsYoungDriver = x.IsYoungDriver
+                })
+                .ToList();
+
+            context.Customers.AddRange(customers);
+            context.SaveChanges();
+
+            return $"Successfully imported {customers.Count}";
+        }
+
         public static string ImportCars(CarDealerContext context, string inputXml)
         {
             var xmlSerialized = new XmlSerializer(typeof(CarImportModel[]), new XmlRootAttribute("Cars"));
