@@ -12,10 +12,34 @@ namespace CarDealer
     {
         public static void Main(string[] args){}
 
+        public static string GetTotalSalesByCustomer(CarDealerContext context)
+        {
+            var customers = context.Customers
+                .Where(x => x.Sales.Count() >= 1)
+                .Select(x => new CustomerExportModel
+                {
+                    FullName = x.Name,
+                    BoughtCars = x.Sales.Count(),
+                    SpentMoney = x.Sales.Sum(s => s.Car.PartCars.Sum(c => c.Part.Price))
+                })
+                .OrderByDescending(x => x.SpentMoney)
+                .ToArray();
+
+            var xmlSerializer = new XmlSerializer(typeof(CustomerExportModel[]), new XmlRootAttribute("customers"));
+
+            var textWriter = new StringWriter();
+
+            var nameSpace = new XmlSerializerNamespaces();
+            nameSpace.Add("", "");
+
+            xmlSerializer.Serialize(textWriter, customers, nameSpace);
+
+            return textWriter.ToString();
+        }
+
         public static string GetCarsWithTheirListOfParts(CarDealerContext context)
         {
             var cars = context.Cars
-                .Take(5)
                 .Select(x => new CarsWithPartsExportModel
                 {
                     Make = x.Make,
@@ -32,6 +56,7 @@ namespace CarDealer
                 })
                 .OrderByDescending(x => x.TravelledDistance)
                 .OrderBy(x => x.Model)
+                .Take(5)
                 .ToArray();
 
             var xmlSerializer = new XmlSerializer(typeof(CarsWithPartsExportModel[]), new XmlRootAttribute("cars"));
