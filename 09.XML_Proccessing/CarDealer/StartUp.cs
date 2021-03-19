@@ -12,6 +12,40 @@ namespace CarDealer
     {
         public static void Main(string[] args){}
 
+        public static string GetCarsWithTheirListOfParts(CarDealerContext context)
+        {
+            var cars = context.Cars
+                .Take(5)
+                .Select(x => new CarsWithPartsExportModel
+                {
+                    Make = x.Make,
+                    Model = x.Model,
+                    TravelledDistance = x.TravelledDistance,
+                    Parts = x.PartCars
+                    .Select(p => new PartsExportModel
+                    {
+                        Name = p.Part.Name,
+                        Price = p.Part.Price
+                    })
+                    .OrderByDescending(x => x.Price)
+                    .ToList()
+                })
+                .OrderByDescending(x => x.TravelledDistance)
+                .OrderBy(x => x.Model)
+                .ToArray();
+
+            var xmlSerializer = new XmlSerializer(typeof(CarsWithPartsExportModel[]), new XmlRootAttribute("cars"));
+
+            var textWriter = new StringWriter();
+
+            var nameSpace = new XmlSerializerNamespaces();
+            nameSpace.Add("", "");
+
+            xmlSerializer.Serialize(textWriter, cars, nameSpace);
+
+            return textWriter.ToString();
+        }
+
         public static string GetLocalSuppliers(CarDealerContext context)
         {
             var suppliers = context.Suppliers
