@@ -10,6 +10,9 @@ namespace RealEstates.ConsoleApplication
         {
             var db = new ApplicationDbContext();
             db.Database.Migrate();
+
+            db.Districts.Add(new Models.District { Name = "Center"});
+            db.SaveChanges();
         }
     }
 }
