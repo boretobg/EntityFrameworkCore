@@ -30,7 +30,7 @@ namespace RealEstates.Models
         public int BuildingTypeId { get; set; }
         public virtual BuildingType BuildingType { get; set; }
 
-        public int Price { get; set; }
+        public int? Price { get; set; }
 
         public virtual ICollection<Tag> Tags { get; set; }
     }
