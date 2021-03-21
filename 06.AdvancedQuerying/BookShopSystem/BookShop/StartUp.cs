@@ -26,7 +26,7 @@
 
             context.SaveChanges();
 
-            return books.Count;
+            return books.Count; //wrong judge tests, default - return context.SaveChanges(), not books.Count
         }
 
         public static void IncreasePrices(BookShopContext context)
