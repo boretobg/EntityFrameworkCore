@@ -56,9 +56,22 @@ namespace RealEstates.Services
             dbContext.SaveChanges();
         }
 
-            public IEnumerable<PropertyInfoDto> Search(int minPrice, int maxPrice, int minSize, int maxSize)
+        public IEnumerable<PropertyInfoDto> Search(int minPrice, int maxPrice, int minSize, int maxSize)
         {
-            return new List<PropertyInfoDto>();
+            var properties = dbContext.Properties
+                .Where(x => x.Price >= minPrice && x.Price <= maxPrice &&
+                            x.Size >= minSize && x.Size <= maxSize)
+                .Select(x => new PropertyInfoDto
+                {
+                    Size = x.Size,
+                    Price = x.Price ?? 0,
+                    BuildingType = x.BuildingType.Name,
+                    DistrictName = x.District.Name,
+                    PropertyType = x.Type.Name
+                })
+                .ToList();
+
+            return properties;
         }
     }
 }
