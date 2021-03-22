@@ -35,7 +35,8 @@ namespace RealEstates.ConsoleApplication
                             PropertySearch(db);
                             break;
                         case 2:
-                            MostExpensiveDistrict(db);
+                            int input = int.Parse(Console.ReadLine());
+                            MostExpensiveDistrict(db, input);
                             break;
                         default:
                             break;
@@ -47,10 +48,10 @@ namespace RealEstates.ConsoleApplication
             }
         }
 
-        private static void MostExpensiveDistrict(ApplicationDbContext db)
+        private static void MostExpensiveDistrict(ApplicationDbContext db, int count)
         {
             IDistricsService districsService = new DistrictsService(db);
-            var districts = districsService.GetMostExpensiveDistricts(20);
+            var districts = districsService.GetMostExpensiveDistricts(count);
 
             foreach (var dists in districts)
             {
