@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Quiz.Data;
+using Quiz.Services;
 using Quiz.Web.Data;
 using System;
 using System.IO;
@@ -17,12 +18,8 @@ namespace Quiz.ConsoleUI
             ConfigureServices(serviceCollection);
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
-            var dbContext = serviceProvider.GetService<ApplicationDbContext>();
-
-            foreach (var item in dbContext.Users)
-            {
-                Console.WriteLine(item.UserName);
-            }
+            var answerService = serviceProvider.GetService<IAnswerService>();
+            answerService.Add("It is a MicroORM", 0, false, 1);
         }
 
         private static void ConfigureServices(IServiceCollection services)
@@ -38,6 +35,12 @@ namespace Quiz.ConsoleUI
             services.AddDefaultIdentity<IdentityUser>(options
                 => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services.AddTransient<IQuizService, QuizService>();
+
+            services.AddTransient<IQuestionService, QuestionService>();
+
+            services.AddTransient<IAnswerService, AnswerService>();
         }
     }
 }

@@ -30,6 +30,14 @@ namespace Quiz.Web.Data
             builder.Entity<UserAnswer>()
                 .HasKey(x => new { x.IdentityUserId, x.QuizId });
 
+
+            //FK_Questions_Quizzes_QuizId
+            builder.Entity<Question>()
+                .HasOne(x => x.Quiz)
+                .WithMany(x => x.Questions)
+                .HasForeignKey(x => x.QuizId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             base.OnModelCreating(builder);
         }
     }
