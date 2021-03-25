@@ -18,8 +18,19 @@ namespace Quiz.ConsoleUI
             ConfigureServices(serviceCollection);
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
-            var answerService = serviceProvider.GetService<IAnswerService>();
-            answerService.Add("It is a MicroORM", 0, false, 1);
+            var quizService = serviceProvider.GetService<IQuizService>();
+            var quiz = quizService.GetQuizById(1);
+
+            Console.WriteLine(quiz.Title);
+            foreach (var question in quiz.Questions)
+            {
+                Console.WriteLine(question.Title);
+
+                foreach (var answer in question.Answers)
+                {
+                    Console.WriteLine(answer.Title);
+                }
+            }
         }
 
         private static void ConfigureServices(IServiceCollection services)
@@ -41,6 +52,8 @@ namespace Quiz.ConsoleUI
             services.AddTransient<IQuestionService, QuestionService>();
 
             services.AddTransient<IAnswerService, AnswerService>();
+
+            services.AddTransient<IUserAnswerService, UserAnswerService>();
         }
     }
 }
