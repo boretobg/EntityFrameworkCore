@@ -2,25 +2,155 @@
 {
 
     using Data;
+    using Newtonsoft.Json;
+    using SoftJail.Data.Models;
+    using SoftJail.Data.Models.Enums;
+    using SoftJail.DataProcessor.ImportDto;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
+    using System.Globalization;
+    using System.Linq;
+    using System.Text;
 
     public class Deserializer
     {
         public static string ImportDepartmentsCells(SoftJailDbContext context, string jsonString)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            var departments = new List<Department>();
+
+            var departmentsCells = JsonConvert.DeserializeObject<DepartmentCellImportModel[]>(jsonString);
+
+            foreach (var departmentCell in departmentsCells)
+            {
+                if (!IsValid(departmentCell) || !departmentCell.Cells.All(IsValid) || !departmentCell.Cells.Any())
+                {
+                    sb.AppendLine("Invalid Data");
+                    continue;
+                }
+
+                var department = new Department
+                {
+                    Name = departmentCell.Name,
+                    Cells = departmentCell.Cells
+                    .Select(x => new Cell
+                    {
+                        CellNumber = x.CellNumber,
+                        HasWindow = x.HasWindow
+                    })
+                    .ToList()
+                };
+
+                departments.Add(department);
+                sb.AppendLine($"Imported {department.Name} with {department.Cells.Count} cells");
+
+                //foreach (var item in departmentCell.Cells)
+                //{
+                //    if (!IsValid(item))
+                //    {
+                //        sb.AppendLine("Invalid Data");
+                //    }
+                //}
+            }
+
+            context.Departments.AddRange(departments);
+            context.SaveChanges();
+
+            return sb.ToString().TrimEnd();
         }
 
         public static string ImportPrisonersMails(SoftJailDbContext context, string jsonString)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            var prisoners = new List<Prisoner>();
+
+            var prisonerMails = JsonConvert.DeserializeObject<PrisonerMailInputModel[]>(jsonString);
+
+            foreach (var currentPrisoner in prisonerMails)
+            {
+                if (!IsValid(currentPrisoner) || !currentPrisoner.Mails.All(IsValid))
+                {
+                    sb.AppendLine("Invalid Data");
+                    continue;
+                }
+
+                var isValidReleaseDate = DateTime
+                    .TryParseExact(currentPrisoner.ReleaseDate, 
+                    "dd/MM/yyyy", 
+                    CultureInfo.InvariantCulture, 
+                    DateTimeStyles.None,
+                    out DateTime releaseDate);
+
+                var incarcerationDate = DateTime
+                    .ParseExact(currentPrisoner.IncarcerationDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+
+                var prisoner = new Prisoner
+                {
+                    FullName = currentPrisoner.FullName,
+                    Nickname = currentPrisoner.Nickname,
+                    Age = currentPrisoner.Age,
+                    Bail = currentPrisoner.Bail,
+                    CellId = currentPrisoner.CellId,
+                    ReleaseDate = isValidReleaseDate ? (DateTime?)releaseDate : null,
+                    IncarcerationDate = incarcerationDate,
+                    Mails = currentPrisoner.Mails.Select(x => new Mail
+                    { 
+                        Sender = x.Sender,
+                        Address = x.Address, 
+                        Description = x.Description
+                    })
+                    .ToList()
+                };
+
+                prisoners.Add(prisoner);
+                sb.AppendLine($"Imported {prisoner.FullName} {prisoner.Age} years old");
+            }
+
+            context.Prisoners.AddRange(prisoners);
+            context.SaveChanges();
+
+            return sb.ToString().TrimEnd();
         }
 
         public static string ImportOfficersPrisoners(SoftJailDbContext context, string xmlString)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            var validOfficers = new List<Officer>();
+
+            var officerPrisoners = XMLConverter.Deserializer<OfficerPrisonerInputModel>(xmlString, "Officers");
+
+            foreach (var officerPrisoner in officerPrisoners)
+            {
+                if (!IsValid(officerPrisoner))
+                {
+                    sb.AppendLine("Invalid Data");
+                    continue;
+                }
+
+                var officer = new Officer
+                {
+                    FullName = officerPrisoner.Name,
+                    Salary = officerPrisoner.Money,
+                    DepartmentId = officerPrisoner.DepartmentId,
+                    Position = Enum.Parse<Position>(officerPrisoner.Position),
+                    Weapon = Enum.Parse<Weapon>(officerPrisoner.Weapon),
+                    OfficerPrisoners = officerPrisoner.Prisoners.Select(x => new OfficerPrisoner
+                    {
+                        PrisonerId = x.Id
+                    })
+                    .ToList()
+                };
+
+                validOfficers.Add(officer);
+                sb.AppendLine($"Imported {officer.FullName} ({officer.OfficerPrisoners.Count} prisoners)");
+
+            }
+
+            context.Officers.AddRange(validOfficers);
+            context.SaveChanges();
+
+            return sb.ToString().TrimEnd();
         }
 
         private static bool IsValid(object obj)
