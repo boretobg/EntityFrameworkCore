@@ -9,6 +9,7 @@
     using Newtonsoft.Json;
     using VaporStore.Data.Models;
     using VaporStore.DataProcessor.Dto;
+    using VaporStore.DataProcessor.Dto.Import;
 
     public static class Deserializer
     {
@@ -59,7 +60,39 @@
 
         public static string ImportUsers(VaporStoreDbContext context, string jsonString)
         {
-            return "";
+            var sb = new StringBuilder();
+
+            var jsonUsers = JsonConvert.DeserializeObject<IEnumerable<UserImportModel>>(jsonString);
+
+            foreach (var jsonUser in jsonUsers)
+            {
+                if (!IsValid(jsonUser))
+                {
+                    sb.AppendLine("Invalid Data");
+                    continue;
+                }
+
+                var user = new User
+                {
+                    FullName = jsonUser.FullName,
+                    Username = jsonUser.Username,
+                    Email = jsonUser.Email,
+                    Age = jsonUser.Age,
+                    Cards = jsonUser.Cards.Select(x => new Card
+                    {
+                        Cvc = x.CVC,
+                        Number = x.Number,
+                        Type = x.Type.Value
+                    }).ToList()
+                };
+
+                context.Users.Add(user);
+                context.SaveChanges();
+
+                sb.AppendLine($"Imported {jsonUser.Username} with {jsonUser.Cards.Count()} cards");
+            }
+
+            return sb.ToString().TrimEnd();
         }
 
         public static string ImportPurchases(VaporStoreDbContext context, string xmlString)
