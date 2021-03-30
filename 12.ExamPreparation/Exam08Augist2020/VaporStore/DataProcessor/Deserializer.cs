@@ -3,8 +3,11 @@
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
+    using System.Globalization;
+    using System.IO;
     using System.Linq;
     using System.Text;
+    using System.Xml.Serialization;
     using Data;
     using Newtonsoft.Json;
     using VaporStore.Data.Models;
@@ -56,7 +59,7 @@
             }
 
             return sb.ToString().TrimEnd();
-        }  
+        }
 
         public static string ImportUsers(VaporStoreDbContext context, string jsonString)
         {
@@ -97,7 +100,46 @@
 
         public static string ImportPurchases(VaporStoreDbContext context, string xmlString)
         {
-            return "";
+            var sb = new StringBuilder();
+
+            var xmlSerializer = new XmlSerializer(typeof(PurchaseXmlImportModel[]), new XmlRootAttribute("Purchases"));
+
+            var purchases = (PurchaseXmlImportModel[])xmlSerializer.Deserialize(new StringReader(xmlString));
+
+            foreach (var xmlPurchase in purchases)
+            {
+                if (!IsValid(xmlPurchase))
+                {
+                    sb.AppendLine("Invalid Data");
+                    continue;
+                }
+
+                bool parsedDate = DateTime.TryParseExact(xmlPurchase.Date, "dd/MM/yyyy HH:mm", 
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out var date);
+                if (!parsedDate)
+                {
+                    sb.AppendLine("Invalid Data");
+                    continue;
+                }
+
+                var purchase = new Purchase
+                {
+                    Date = date,
+                    Type = xmlPurchase.PurchaseType.Value,
+                    ProductKey = xmlPurchase.Key,
+                    Card = context.Cards.FirstOrDefault(x => x.Number == xmlPurchase.Card),
+                    Game = context.Games.FirstOrDefault(x => x.Name == xmlPurchase.GameName)
+                };
+
+                context.Purchases.Add(purchase);
+
+                var username = context.Users.Where(x => x.Id == purchase.Card.UserId).Select(x => x.Username).FirstOrDefault();
+                sb.AppendLine($"Imported {xmlPurchase.GameName} for {username}");
+            };
+
+            context.SaveChanges();
+
+            return sb.ToString().TrimEnd();
         }
 
         private static bool IsValid(object dto)
