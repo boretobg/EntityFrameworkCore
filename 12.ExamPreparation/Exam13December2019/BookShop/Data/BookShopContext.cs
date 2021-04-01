@@ -25,6 +25,8 @@
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<AuthorBook>()
+                .HasKey(x => new { x.AuthorId, x.BookId });
         }
     }
 }
