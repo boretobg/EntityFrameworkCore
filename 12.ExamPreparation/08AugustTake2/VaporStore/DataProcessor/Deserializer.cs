@@ -4,8 +4,11 @@
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.Globalization;
+    using System.IO;
     using System.Linq;
     using System.Text;
+    using System.Xml;
+    using System.Xml.Serialization;
     using Data;
     using Newtonsoft.Json;
     using VaporStore.Data.Models;
@@ -17,6 +20,7 @@
         private const string ErrorMessage = "Invalid Data";
         private const string ImportedUsers = "Imported {0} with {1} cards";
         private const string ImportedGames = "Added {0} ({1}) with {2} tags";
+        private const string ImportedProduct = "Imported {0} for {1}";
 
         public static string ImportGames(VaporStoreDbContext context, string jsonString)
         {
@@ -83,7 +87,7 @@
                     Email = jsonUser.Email,
                     Age = jsonUser.Age,
                     Cards = jsonUser.Cards.Select(x => new Card
-                    { 
+                    {
                         Number = x.Number,
                         Cvc = x.CVC,
                         Type = x.Type
@@ -102,7 +106,47 @@
 
         public static string ImportPurchases(VaporStoreDbContext context, string xmlString)
         {
-            throw new NotImplementedException();
+            var output = new StringBuilder();
+
+            var xmlSerializer = new XmlSerializer(typeof(PurchasesXmlDto[]), new XmlRootAttribute("Purchases"));
+
+            using (var reader = new StringReader(xmlString))
+            {
+                var xmlPurchases = (PurchasesXmlDto[])xmlSerializer.Deserialize(reader);
+
+                foreach (var xmlPurchase in xmlPurchases)
+                {
+                    if (!IsValid(xmlPurchases))
+                    {
+                        output.AppendLine(ErrorMessage);
+                        continue;
+                    }
+
+                    var isValidDate = DateTime.TryParseExact(xmlPurchase.Date, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out DateTime date);
+                    if (!isValidDate)
+                    {
+                        continue;
+                    }
+
+                    var purchase = new Purchase()
+                    {
+                        Game = context.Games.FirstOrDefault(x => x.Name == xmlPurchase.Title),
+                        Type = xmlPurchase.Type,
+                        ProductKey = xmlPurchase.Key,
+                        Card = context.Cards.FirstOrDefault(x => x.Number == xmlPurchase.CardNumber),
+                        Date = date
+                    };
+
+                    var username = context.Users.Where(x => x.Id == purchase.Card.UserId).Select(x => x.Username).FirstOrDefault();
+
+                    context.Purchases.Add(purchase);
+                    context.SaveChanges();
+                    output.AppendLine($"Imported {xmlPurchase.Title} for {username}");
+                }
+            }
+
+            return output.ToString().TrimEnd();
         }
 
         private static bool IsValid(object dto)
